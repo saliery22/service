@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>СЕВІСНА СЛУЖБА ККЗ</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="//hst-api.wialon.com/wsdk/script/wialon.js"></script>
+  
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Ссылка на шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+
+</head>
+<body>
+<style>
+    /* 1. Глобальные настройки и переменные */
+    :root {
+        --bg-main: #eaedf1;        /* Светлый фон страницы */
+        --bg-card: #ffffff;        /* Белый фон для таблиц и блоков */
+        --text-main: #1e293b;      /* Глубокий темный для текста */
+        --text-muted: #64748b;     /* Серый для подписей и заголовков */
+        --border-color: #d7dce4;   /* Очень мягкие современные границы */
+        --primary: #3b82f6;        /* Элегантный синий (основной акцент) */
+        --primary-hover: #2563eb;
+        --success: #10b981;        /* Насыщенный зеленый (создание/очистка) */
+        --success-hover: #059669;
+        --radius: 8px;             /* Скругление углов для всех элементов */
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body, html { 
+        margin: 0; 
+        padding: 0; 
+        height: 100%; 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Основной контейнер приложения */
+    #zz24 {
+        padding: 24px;
+        max-width: calc(100% - 200px);
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
+    /* Полное исправление для контейнера меню и его кнопок */
+    #menu {
+        display: flex !important;
+        justify-content: space-between;
+        gap: 8px; /* Небольшое расстояние между кнопками */
+        width: 100%;
+        box-sizing: border-box; /* Чтобы padding не раздувал меню вширь */
+        background: var(--bg-card);
+        padding: 6px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        margin-bottom: 24px;
+        overflow: hidden; /* Гарантирует, что фон кнопок не вылезет за скругленные углы */
+
+          box-shadow: 0 10px 15px -3px rgba(148, 163, 184, 0.08), 
+                0 4px 6px -2px rgba(148, 163, 184, 0.04);
+
+    }
+
+    #menu button {
+        flex: 1; /* Равномерно растягивает все кнопки по ширине */
+        margin-bottom: 0 !important; /* Убираем нижний отступ, который мог ломать высоту */
+        border: none !important; /* Убираем старую черную рамку */
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 500;
+        padding: 12px 16px; /* Одинаковые аккуратные внутренние отступы */
+        border-radius: calc(var(--radius) - 2px);
+        transition: var(--transition);
+        white-space: nowrap; /* Чтобы текст не переносился на другую строку */
+    }
+
+    #menu button:hover {
+        background: #f1f5f9;
+        color: var(--text-main);
+    }
+
+    /* Класс для активной кнопки меню (добавьте его через JS нужной вкладке) */
+    #menu button.active {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* 3. Кнопки управления и действия */
+    button {
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-main);
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    button:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    button:active {
+        transform: scale(0.98);
+    }
+
+    /* Акцентная зеленая кнопка (Очистить / Создать) */
+    #bt_mh_crt, #bt_dv_crt {
+        background: var(--success);
+        color: white;
+        border: none;
+    }
+    #bt_mh_crt:hover, #bt_dv_crt:hover { 
+        background: var(--success-hover); 
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Акцентная синяя кнопка (Отправить / Сохранить) */
+    #bt_mh_save, #bt_dv_save {
+        background: var(--primary);
+        color: white;
+        border: none;
+    }
+    #bt_mh_save:hover, #bt_dv_save:hover { 
+        background: var(--primary-hover); 
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Контейнеры форм (например, розовый блок ТО) */
+    #naryad_div > div[style*="background-color"] {
+        background-color: var(--bg-card) !important; /* Убираем едкий розовый цвет */
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 20px !important;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        margin-bottom: 24px;
+
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 
+                0 10px 24px -5px rgba(148, 163, 184, 0.15), 
+                0 4px 12px -4px rgba(148, 163, 184, 0.1);
+    }
+
+    /* 4. Современные Сравочные таблицы и Форма ТО */
+    .table, .form_to {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    
+     box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.08), 
+                0 2px 4px -1px rgba(148, 163, 184, 0.04);
+}
+
+
+
+/* Добавляем эти правила, чтобы скругления углов не ломались без overflow: hidden */
+ .form_to tr:first-child td:first-child {
+    border-top-left-radius: var(--radius);
+}
+ .form_to tr:first-child td:last-child {
+    border-top-right-radius: var(--radius);
+}
+.form_to tr:last-child td:first-child {
+    border-bottom-left-radius: var(--radius);
+}
+.form_to tr:last-child td:last-child {
+    border-bottom-right-radius: var(--radius);
+}
+
+    /* Стилизация шапки таблиц */
+  .form_to tr:first-child td {
+        background: #f8fafc;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
+    }
+
+    /* Обычные ячейки данных */
+    .table td, .form_to td {
+        border-bottom: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        padding: 5px 5px;
+        font-size: 14px;
+        color: var(--text-main);
+        transition: var(--transition);
+    }
+
+    .form_to tr:last-child td {
+        border-bottom: none; /* Убираем нижнюю линию у последней строки */
+    }
+
+    .form_to td:last-child {
+        border-right: none; /* Убираем правую линию у последней колонки */
+    }
+
+    /* Подсветка строки при наведении в таблицах со списками */
+    .table tr:not(:first-child):hover td {
+        background-color: #f8fafc;
+    }
+
+    /* Интерактивные редактируемые ячейки */
+    td[contenteditable="true"] {
+        cursor: text;
+        color: var(--primary);
+        font-weight: 500;
+    }
+    td[contenteditable="true"]:focus {
+        background: #eff6ff;
+        outline: 2px solid var(--primary);
+        outline-offset: -2px;
+    }
+
+    /* 5. Поля ввода внутри таблицы (.input-cell) */
+    .form_to td.input-cell {
+        padding: 0;
+        background: #ffffff;
+    }
+
+    .form_to td.input-cell > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .form_to td.input-cell input {
+        width: 100%;
+        height: 100%;
+        padding: 14px 16px;
+        border: none;
+        background: transparent;
+        box-sizing: border-box;
+        font-size: 14px;
+        color: var(--text-main);
+        text-align: center;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .form_to td.input-cell input:focus {
+        background-color: #f8fafc;
+    }
+
+    /* Placeholder для инпутов */
+    .form_to td.input-cell input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    /* 6. Выпадающий список подсказок (Умный поиск) */
+    .suggestions-top {
+        position: absolute;
+        top: calc(100% + 4px);   /* Небольшой отступ от ячейки */
+        left: 0;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        max-height: 260px;
+        overflow-y: auto;
+        display: none;
+        z-index: 9999;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Элемент списка подсказок */
+    .suggestion-item {
+        padding: 10px 16px;
+        color: var(--text-main);
+        text-align: left;       /* Текст подсказок лучше читать слева */
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+
+    /* Кастомный красивый скроллбар для выпадающего списка */
+    .suggestions-top::-webkit-scrollbar {
+        width: 6px;
+    }
+    .suggestions-top::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .suggestions-top::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    .suggestions-top::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+
+
+
+        <div id="zz24" class='zvit'>
+    <div  id="menu"  style="display: flex; justify-content: space-between; gap: 10px; width: 100%;">
+        <button id='bt_mh_naryad' style='flex-grow: 1;'>🛠️ ВІДКРИТІ ТО</button>
+        <button id='bt_mh_remont' style='flex-grow: 1;'>✅ ЗАВЕРШЕНІ ТО</button>
+        <button id='bt_mh_zamina' style='flex-grow: 1;'>🔄 Заміна</button>
+        <button id='bt_mh_dovidnuk' style='flex-grow: 1;'>📚 Довідник</button>
+        <button id='bt_mh_zvit' style='flex-grow: 1;'>📊 Звіти</button>
+    </div>
+
+        <div id='naryad_div' >
+            <div style=" background-color: #ffd0d0; padding: 10px; text-align: center;">
+            <table id="mh_naryad" class='form_to'>
+             <tr><td>🆔 наряд</td><td>🚜 транспорт</td><td>🛠️ ТО</td><td>📍 локація</td><td>👷 замовник</td><td>💬 коментар</td></tr>
+              <tr>
+                <td contenteditable="true">----</td>
+                <td class="input-cell">
+                    <div>
+                        <div  class="suggestions-top"></div>
+                        <input  class="autocomplete-input source-units" type="text" placeholder="Пошук техники..." onfocus="this.value=''">
+                    </div>
+                </td>
+                
+                <td contenteditable="true">----</td>
+                <td contenteditable="true">----</td>
+                <td class="input-cell">
+                    <div>
+                        <div  class="suggestions-top"></div>
+                        <input  class="autocomplete-input source-users" type="text" placeholder="Пошук ..." onfocus="this.value=''">
+                    </div>
+                </td>
+                <td contenteditable="true">----</td>
+            </table>
+             <div style="display: flex; justify-content: flex-end; gap: 3px;">
+                <button id='bt_mh_crt' style='width: 150px;'> 🧹 ОЧИСТИТИ </button> 
+                <button id='bt_mh_save' style='width: 150px;'> 💾 СТВОРИТИ </button>
+            </div>
+            </div>
+            <div style='text-align: center; margin-top: 10px;'>
+                ВІДКРИТІ НАРЯДИ
+                 <div style="height: calc(100vh - 500px); max-height: calc(100vh - 500px); overflow-y: auto; margin-top: 10px; border: none;">
+                  <table id="mh_naryady" class='table'>
+                     <thead>    
+            <tr><td>📅 дата створення</td><td>🆔 наряд</td><td>🚦 статус</td><td>👤 виконавець</td><td>🚜 транспорт</td><td>🛠️ ТО</td><td>📍 локація</td><td>👷 замовник</td><td>💬 коментар</td></tr>
+             </thead>
+             <tbody></tbody>
+            </table>
+            </div>
+            </div>
+        </div>
+
+        <div id='dovidnyk_div' style="display: none;">
+            <div style="display: flex; justify-content: space-between; gap: 10px; width: 50%; margin: 0 auto;">
+            <button id='bt_dv_traktora' style='width:32%;'> 🚜 техніка/екіпажі </button> 
+            <button id='bt_dv_to' style='width:32%;'> ⚙️ види ТО </button> 
+            <button id='bt_dv_ludi' style='width:32%;'> 👷 сервісні інженери </button> 
+            </div>
+         <div style='text-align: center; margin-top: 10px;'>
+             <div style="height: calc(100vh - 300px); max-height: calc(100vh - 300px); overflow-y: auto; margin-top: 10px; border: none;">
+            <table id="dv_table" class='table'>
+            </table>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 3px;">
+            <button id='bt_dv_crt' style='width: 200px; display: none;'> ➕ ДОДАТИ </button> 
+            <button id='bt_dv_save' style='width: 200px; display: none;'> 💾 ЗБЕРІГТИ ЗМІНИ </button> 
+            </div> 
+        </div>
+        </div>
+
+        <div id='complate_div' style="display: none;">
+              <div style="height: calc(100vh - 500px); max-height: calc(100vh - 500px); overflow-y: auto; margin-top: 10px; border: none;">
+                  <table id="comolate_naryady" class='table'>
+                     <thead>    
+            <tr><td>📅 дата створення</td><td>🆔 наряд</td><td>надіслано</td><td>прийнято</td><td>розпочато</td><td>виконано</td><td>👤 виконавець</td><td>🚜 транспорт</td><td>🛠️ ТО</td><td>📍 локація</td><td>👷 замовник</td><td>💬 коментар</td></tr>
+             </thead>
+             <tbody></tbody>
+            </table>
+            </div>
+        </div>
+
+    </div>
+   
+<script src="zup.js"></script> 
+
+</body>
+</html>
+
