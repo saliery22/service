@@ -481,6 +481,7 @@ async function naryady_list_update(){
     $('#mh_naryady tbody').empty();
    }
 }
+let naryadsArray=[];
 async function update_complate(){
         try {
         let rawText = await async_read(ftp_id, 'Servis/story', 'complete.txt');
@@ -494,7 +495,7 @@ async function update_complate(){
             rawText = rawText.slice(0, -1);
             }
         const validJsonArray = `[${rawText}]`;
-        const naryadsArray = JSON.parse(validJsonArray);
+        naryadsArray = JSON.parse(validJsonArray).reverse();
         for (const item of naryadsArray) {
              let t0 = new Date(Number(item.t0)).toLocaleString();
              let t1 = new Date(Number(item.t1)).toLocaleString();
@@ -546,3 +547,58 @@ function find_item_lokation(name) {
         });
     });
 }
+
+document.querySelector('#comolate_naryady thead').addEventListener('click', function(e) {
+    const row = e.target.closest('tr');
+    const cell = e.target.closest('td');
+    if (!cell || !row) return;
+    row.querySelectorAll('td').forEach(td => {
+        td.style.backgroundColor ='#dfe7ff'; 
+    });
+    cell.style.backgroundColor = '#ffdfdf';
+
+     const colIndex = cell.cellIndex;
+         const fields = [
+        't0',        // 0: дата створення
+        'naryad',    // 1: наряд
+        't1',        // 2: надіслано
+        't2',        // 3: прийнято
+        't3',        // 4: розпочато
+        't4',        // 5: виконано
+        'vik',       // 6: виконавець
+        'transport', // 7: транспорт
+        'to',        // 8: ТО
+        'location',  // 9: локація
+        'customer',  // 10: замовник
+        'comment'    // 11: коментар
+    ];
+    const sortField = fields[colIndex];
+        // 3. Сортируем массив naryadsArray
+    naryadsArray.sort((a, b) => {
+        let valA = a[sortField];
+        let valB = b[sortField];
+
+        // Если сортируем даты (t0, t1, t2, t3, t4) или числа (naryad), приводим к числам
+        if (['t0', 't1', 't2', 't3', 't4', 'naryad'].includes(sortField)) {
+            return Number(valA) - Number(valB);
+        }
+
+        // Если сортируем обычные строки (текст), используем localeCompare для корректного украинского/русского языка
+        valA = valA ? String(valA) : '';
+        valB = valB ? String(valB) : '';
+        return valA.localeCompare(valB);
+    });
+
+         $('#comolate_naryady tbody').empty();
+     for (const item of naryadsArray) {
+             let t0 = new Date(Number(item.t0)).toLocaleString();
+             let t1 = new Date(Number(item.t1)).toLocaleString();
+             let t2 = new Date(Number(item.t2)).toLocaleString();
+             let t3 = new Date(Number(item.t3)).toLocaleString();
+             let t4 = new Date(Number(item.t4)).toLocaleString();
+             $("#comolate_naryady tbody").append("<tr><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+
+        }
+
+    
+});
