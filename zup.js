@@ -25,6 +25,22 @@ function async_write(id, folder, fileName, content) {
         });
     });
 }
+function async_write_end(id, folder, fileName, content) {
+    return new Promise((resolve, reject) => {
+        const remote = wialon.core.Remote.getInstance();
+        const path = '//' + (folder ? folder + '/' : '') + fileName;
+        remote.remoteCall('file/write', {itemId: id, storageType: 1, path: path,content: content,  writeType: 1, contentType: 0}, (error) => {
+            if (error) {
+                const errorText = wialon.core.Errors.getErrorText(error);
+                console.error(errorText);
+                return reject(errorText);
+            }
+            
+            console.log(`Доаписано в ${path}`);
+            resolve();
+        });
+    });
+}
 function async_read(id, folder, fileName) {
     return new Promise((resolve, reject) => {
         const remote = wialon.core.Remote.getInstance();
@@ -35,7 +51,7 @@ function async_read(id, folder, fileName) {
                 console.error(errorText);
                 return reject(errorText);
             }
-            console.log(`Прочитано ${path}`);
+           // console.log(`Прочитано ${path}`);
             resolve(data.content);  
         });
     });
@@ -496,17 +512,53 @@ async function update_complate(){
             }
         const validJsonArray = `[${rawText}]`;
         naryadsArray = JSON.parse(validJsonArray).reverse();
+             try {
+                 let rawText2 = await async_read(ftp_id, 'Servis/story', 'provedeno.txt');
+                    rawText2 = rawText2.trim();
+                    if (rawText2.endsWith(',')) {
+                        rawText2 = rawText2.slice(0, -1);
+                        }
+                    const validJsonArray2 = `[${rawText2}]`;
+                    const provedenoArray = JSON.parse(validJsonArray2);
+                      const lastStatusMap = {};
+                    for (const row of provedenoArray) {
+                        if (row && row.naryad !== undefined) {
+                            lastStatusMap[String(row.naryad)] = row.chek;
+                        }
+                    }
+                    for (const item of naryadsArray) {
+                             const itemKey = String(item.naryad);
+                            if (itemKey in lastStatusMap) {
+                                item.chek = !!lastStatusMap[itemKey];
+                            } else {
+                                item.chek = false;
+                            }
+                    }
+
+                  } catch (e) {
+                console.error("Ошибка загрузки проведених:", e);
+                   for (const item of naryadsArray) {
+                item.chek = false;
+            }
+            }
+
         for (const item of naryadsArray) {
              let t0 = new Date(Number(item.t0)).toLocaleString();
              let t1 = new Date(Number(item.t1)).toLocaleString();
              let t2 = new Date(Number(item.t2)).toLocaleString();
              let t3 = new Date(Number(item.t3)).toLocaleString();
              let t4 = new Date(Number(item.t4)).toLocaleString();
-             $("#comolate_naryady tbody").append("<tr><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             let t5 = formatMilliseconds(item.t4-item.t3);
+             let isChecked = item.chek ? 'checked' : '';
+             if(isChecked){
+                 $("#comolate_naryady tbody").append("<tr style='background-color: #e2fcd5;'><td><input type='checkbox' " + isChecked + "></td><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+t5+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             }else{
+                $("#comolate_naryady tbody").append("<tr><td><input type='checkbox' " + isChecked + "></td><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+t5+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             }
 
         }
        } catch (e) {
-        console.error("Ошибка сохранения:", e);
+        console.error("Ошибка загрузки истории:", e);
        }
 }
 
@@ -559,18 +611,20 @@ document.querySelector('#comolate_naryady thead').addEventListener('click', func
 
      const colIndex = cell.cellIndex;
          const fields = [
+        'chek',        // 0: дата створення
         't0',        // 0: дата створення
         'naryad',    // 1: наряд
         't1',        // 2: надіслано
         't2',        // 3: прийнято
         't3',        // 4: розпочато
         't4',        // 5: виконано
-        'vik',       // 6: виконавець
-        'transport', // 7: транспорт
-        'to',        // 8: ТО
-        'location',  // 9: локація
-        'customer',  // 10: замовник
-        'comment'    // 11: коментар
+        't5',        // 6: робота
+        'vik',       // 7: виконавець
+        'transport', // 8: транспорт
+        'to',        // 9: ТО
+        'location',  // 10: локація
+        'customer',  // 11: замовник
+        'comment'    // 12: коментар
     ];
     const sortField = fields[colIndex];
         // 3. Сортируем массив naryadsArray
@@ -578,9 +632,14 @@ document.querySelector('#comolate_naryady thead').addEventListener('click', func
         let valA = a[sortField];
         let valB = b[sortField];
 
+          if (sortField === 'chek') {
+            return Number(a.chek ?? 0) - Number(b.chek ?? 0);
+        }
+
+
         // Если сортируем даты (t0, t1, t2, t3, t4) или числа (naryad), приводим к числам
-        if (['t0', 't1', 't2', 't3', 't4', 'naryad'].includes(sortField)) {
-            return Number(valA) - Number(valB);
+        if (['t0', 't1', 't2', 't3', 't4','t5', 'naryad'].includes(sortField)) {
+            return Number(valB) - Number(valA);
         }
 
         // Если сортируем обычные строки (текст), используем localeCompare для корректного украинского/русского языка
@@ -596,9 +655,54 @@ document.querySelector('#comolate_naryady thead').addEventListener('click', func
              let t2 = new Date(Number(item.t2)).toLocaleString();
              let t3 = new Date(Number(item.t3)).toLocaleString();
              let t4 = new Date(Number(item.t4)).toLocaleString();
-             $("#comolate_naryady tbody").append("<tr><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             let t5 = formatMilliseconds(item.t4 -item.t3);
+             let isChecked = item.chek ? 'checked' : '';
+             if(isChecked){
+                 $("#comolate_naryady tbody").append("<tr style='background-color: #e2fcd5;'><td><input type='checkbox' " + isChecked + "></td><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+t5+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             }else{
+                $("#comolate_naryady tbody").append("<tr><td><input type='checkbox' " + isChecked + "></td><td>"+t0+"</td><td>"+item.naryad+"</td><td>"+t1+"</td><td>"+t2+"</td><td>"+t3+"</td><td>"+t4+"</td><td>"+t5+"</td><td>"+item.vik+"</td><td>"+item.transport+"</td><td>"+item.to+"</td><td>"+item.location+"</td><td>"+item.customer+"</td><td>"+item.comment+"</td></tr>"); 
+             }
+             
 
         }
 
     
+});
+
+
+function formatMilliseconds(totalMs) {
+
+  const totalSeconds = Math.floor(totalMs / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = (num) => String(num).padStart(2, '0');
+
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+$(document).on('change', '#comolate_naryady tbody input[type="checkbox"]', async function() {
+    const $checkbox = $(this);
+    const $row = $checkbox.closest('tr');
+    const rowIndex = $row.index();
+    const id = $row[0].cells[2].textContent;
+
+    
+    try {
+        const dataObject = {naryad: id, chek: $checkbox.prop('checked')};
+        let content = JSON.stringify(dataObject) + ",\n";
+        await async_write_end(ftp_id, 'Servis/story', 'provedeno.txt', content);
+        if (naryadsArray[rowIndex])    naryadsArray[rowIndex].chek = $checkbox.prop('checked');
+    if ($checkbox.prop('checked')) {
+        $row.css('background-color', '#e2fcd5'); // Светло-зеленый цвет
+    } else {
+        $row.css('background-color', ''); // Возвращаем стандартный цвет
+    }
+    } catch (e) {
+        console.error("Ошибка сохранения:", e);
+    }
+
+
 });
