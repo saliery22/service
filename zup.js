@@ -483,9 +483,11 @@ async function naryady_list_update(){
         try {
         let naryad = await async_read(ftp_id, 'Servis/new', data[i]);
         naryad = JSON.parse(naryad);
-        let date = new Date(Number(data[i].replace(".json", ""))).toLocaleString();
-        let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-        html += "<tr><td>"+date+"</td><td>"+naryad[0].naryad+"</td><td>"+naryad[0].status+"<br>"+date_st+"</td><td>"+naryad[0].vik+"</td><td>"+naryad[0].transport+"</td><td>"+naryad[0].to+"</td><td>"+naryad[0].location+"</td><td>"+naryad[0].customer+"</td><td>"+naryad[0].comment+"</td></tr>";
+        if(naryad[0].naryad!="del"){
+          let date = new Date(Number(data[i].replace(".json", ""))).toLocaleString();
+          let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
+          html += "<tr><td>"+date+"</td><td>"+naryad[0].naryad+"</td><td>"+naryad[0].status+"<br>"+date_st+"</td><td>"+naryad[0].vik+"</td><td>"+naryad[0].transport+"</td><td>"+naryad[0].to+"</td><td>"+naryad[0].location+"</td><td>"+naryad[0].customer+"</td><td>"+naryad[0].comment+"</td><td  data-id='"+ data[i] +"' >❌</td></tr>";
+        }
        } catch (e) {
         console.error("Ошибка сохранения:", e);
        }
@@ -705,4 +707,23 @@ $(document).on('change', '#comolate_naryady tbody input[type="checkbox"]', async
     }
 
 
+});
+
+$("#mh_naryady tbody").on("click", "td:nth-child(10)", async function() {
+const naryadId = $(this).data("id");
+   try {
+  let naryad = await async_read(ftp_id, 'Servis/new', naryadId);
+        naryad = JSON.parse(naryad);
+        naryad[0].naryad = "del";  
+        const content =  JSON.stringify(naryad, null, 2); // Возвращаем красивый JSON-текст
+    try {
+        await async_write(ftp_id, 'Servis/new', naryadId, content);
+    } catch (e) {
+        console.error("Ошибка удаления (не прочитал):", e);
+    }
+     } catch (e) {
+        console.error("Ошибка удаления (не изминил):", e);
+    }
+     naryady_list_update();
+   
 });
