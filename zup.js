@@ -479,6 +479,7 @@ async function naryady_list_update(){
    let data = await async_filelist(ftp_id,'Servis/new');
    let html = "";
    if(data.length>0){
+     data.reverse();
     for (let i = 0; i < data.length; i++) {
         try {
         let naryad = await async_read(ftp_id, 'Servis/new', data[i]);
@@ -486,7 +487,7 @@ async function naryady_list_update(){
         if(naryad[0].naryad!="del"){
           let date = new Date(Number(data[i].replace(".json", ""))).toLocaleString();
           let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-          html += "<tr><td>"+date+"</td><td>"+naryad[0].naryad+"</td><td>"+naryad[0].status+"<br>"+date_st+"</td><td>"+naryad[0].vik+"</td><td>"+naryad[0].transport+"</td><td>"+naryad[0].to+"</td><td>"+naryad[0].location+"</td><td>"+naryad[0].customer+"</td><td>"+naryad[0].comment+"</td><td  data-id='"+ data[i] +"' >❌</td></tr>";
+          html += "<tr><td>"+date+"</td><td>"+naryad[0].naryad+"</td><td>"+naryad[0].status+"<br>"+date_st+"</td><td>"+naryad[0].vik+"</td><td>"+naryad[0].transport+"</td><td>"+naryad[0].to+"</td><td>"+naryad[0].location+"</td><td>"+naryad[0].customer+"</td><td>"+naryad[0].comment+"</td><td  data-id='"+ data[i] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>";
         }
        } catch (e) {
         console.error("Ошибка сохранения:", e);
