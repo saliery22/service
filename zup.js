@@ -477,9 +477,8 @@ $("#bt_mh_save").on("click", async function (){
 
 async function naryady_list_update(){
    let data = await async_filelist(ftp_id,'Servis/new');
-   let html = "";
+   let data2 = [];
    if(data.length>0){
-     data.reverse();
     for (let i = 0; i < data.length; i++) {
         try {
         let naryad = await async_read(ftp_id, 'Servis/new', data[i]);
@@ -487,15 +486,19 @@ async function naryady_list_update(){
         if(naryad[0].naryad!="del"){
           let date = new Date(Number(data[i].replace(".json", ""))).toLocaleString();
           let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-          html += "<tr><td>"+date+"</td><td>"+naryad[0].naryad+"</td><td>"+naryad[0].status+"<br>"+date_st+"</td><td>"+naryad[0].vik+"</td><td>"+naryad[0].transport+"</td><td>"+naryad[0].to+"</td><td>"+naryad[0].location+"</td><td>"+naryad[0].customer+"</td><td>"+naryad[0].comment+"</td><td  data-id='"+ data[i] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>";
+          data2.push([date, naryad[0].naryad, naryad[0].status, date_st, naryad[0].vik, naryad[0].transport, naryad[0].to, naryad[0].location, naryad[0].customer, naryad[0].comment, data[i], Number(data[i].replace(".json", ""))])
         }
        } catch (e) {
         console.error("Ошибка сохранения:", e);
        }
        
     }
+    data2.sort((a, b) => b[11] - a[11]);
     $('#mh_naryady tbody').empty();
-     $("#mh_naryady  tbody").append(html); 
+    for (let i = 0; i < data2.length; i++) {
+      $("#mh_naryady  tbody").append("<tr><td>"+data2[i][0]+"</td><td>"+data2[i][1]+"</td><td>"+data2[i][2]+"<br>"+data2[i][3]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][8]+"</td><td>"+data2[i][9]+"</td><td  data-id='"+ data2[i][10] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+    }
+
    }else{
     $('#mh_naryady tbody').empty();
    }
