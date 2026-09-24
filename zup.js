@@ -348,27 +348,33 @@ $('#menu > button').click(async function() {
         $('#naryad_div').show();
         $('#dovidnyk_div').hide();
         $('#complate_div').hide();
+        $('#zamina_div').hide();
     }
     if (this.id === 'bt_mh_dovidnuk') {
         $('#naryad_div').hide();
         $('#dovidnyk_div').show();
         $('#complate_div').hide();
+        $('#zamina_div').hide();
     }
     if (this.id === 'bt_mh_remont') {
         $('#naryad_div').hide();
         $('#dovidnyk_div').hide();
         $('#complate_div').show();
+        $('#zamina_div').hide();
         await update_complate();
     }
     if (this.id === 'bt_mh_zamina') {
         $('#naryad_div').hide();
         $('#dovidnyk_div').hide();
         $('#complate_div').hide();
+        $('#zamina_div').show();
+        await zaminy_list_update();
     }
     if (this.id === 'bt_mh_zvit') {
         $('#naryad_div').hide();
         $('#dovidnyk_div').hide();
         $('#complate_div').hide();
+        $('#zamina_div').hide();
     }
 });
 
@@ -707,7 +713,7 @@ $(document).on('change', '#comolate_naryady tbody input[type="checkbox"]', async
         $row.css('background-color', ''); // Возвращаем стандартный цвет
     }
     } catch (e) {
-        console.error("Ошибка сохранения:", e);
+        console.error("Ошибка чтения:", e);
     }
 
 
@@ -731,3 +737,153 @@ const naryadId = $(this).data("id");
      naryady_list_update();
    
 });
+
+// ----Заміни----------------------------------------------------------------
+// ----Заміни----------------------------------------------------------------
+// ----Заміни----------------------------------------------------------------
+// ----Заміни----------------------------------------------------------------
+
+$("#bt_zm_save").on("click", async function (){
+  const fileName = Date.now();
+
+   const table = document.getElementById("mh_zamina");
+    const rows = table.querySelectorAll("tr");
+    const result = [];
+
+    // Ключи для объекта JSON (соответствуют колонкам)
+
+    // Цикл со второй строки (индекс 1), так как индекс 0 — это заголовок
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].querySelectorAll("td");
+        const rowData = {};
+
+        const inputVal = cells[3].querySelector("input").value;
+
+        rowData["status"] = "створено";
+        rowData["status_time"] = fileName;
+        rowData["date"] = inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null;
+        rowData["duration"] = cells[4].querySelector("input").value;
+        rowData["tr"] = cells[0].querySelector("input").value.trim();
+        rowData["meh1"] = cells[1].querySelector("input").value.trim();
+        rowData["meh2"] = cells[2].querySelector("input").value.trim();
+        rowData["comment"] = cells[5].textContent.trim();;
+
+        result.push(rowData);
+    }
+   
+      if(!result[0].tr || !result[0].meh1 || !result[0].meh2 || !result[0].date || !result[0].duration){alert("Заповніть основні поля"); return;}
+
+
+
+    const content =  JSON.stringify(result, null, 2); // Возвращаем красивый JSON-текст
+    try {
+        await async_write(ftp_id, 'Servis/new_zaminy', fileName + '.json', content);
+    } catch (e) {
+        console.error("Ошибка сохранения:", e);
+    }
+     zaminy_list_update();
+});
+
+async function zaminy_list_update(){
+   let data = await async_filelist(ftp_id,'Servis/new_zaminy');
+   let data2 = [];
+   if(data.length>0){
+    for (let i = 0; i < data.length; i++) {
+        try {
+        let naryad = await async_read(ftp_id, 'Servis/new_zaminy', data[i]);
+        naryad = JSON.parse(naryad);
+        if(naryad[0].status!="del"){
+          let date = new Date(Number(naryad[0].date)).toLocaleDateString();
+          let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
+          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, Number(data[i].replace(".json", "")),naryad[0].date])
+        }
+       } catch (e) {
+        console.error("Ошибка чтения:", e);
+       }
+       
+    }
+
+    data2.sort((a, b) => b[9] - a[9]);
+    $('#mh_zaminy tbody').empty();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfTodayMs = today.getTime();
+
+    
+    for (let i = 0; i < data2.length; i++) {
+        let rowStyle = "";
+        let stat = "очікує";
+        const targetDateMs = Number(data2[i][9]); // Таймстамп даты без времени из вашей таблицы
+        const durationDays = Number(data2[i][3]); // Количество дней (например, из инпута number)
+
+        // Вычисляем ключевые временные точки
+        const tomorrowStart = startOfTodayMs + 86400000;
+        const afterTomorrowStart = startOfTodayMs + (86400000 * 2);
+        const expirationDateMs = targetDateMs + (86400000 * durationDays);
+
+        // 1. ЖЁЛТЫЙ: Наряд строго на завтра 
+        if (targetDateMs >= tomorrowStart && targetDateMs < afterTomorrowStart) {
+            rowStyle = " style='background-color: #fcec62;'";
+            stat = "повідомлено";
+        } 
+        // 2. КРАСНЫЙ: Задача в процессе выполнения 
+        else if (startOfTodayMs >= targetDateMs && startOfTodayMs < expirationDateMs) {
+            rowStyle = " style='background-color: #ff3f3f;'";
+                const msLeft = expirationDateMs - startOfTodayMs;
+                const daysLeft = Math.ceil(msLeft / 86400000); 
+                stat = "заміна (зал. " + daysLeft + " дн.)";
+        } 
+        // 3. СЕРЫЙ: Задача успешно завершена 
+        else if (startOfTodayMs >= targetDateMs && startOfTodayMs >= expirationDateMs) {
+            rowStyle = " style='background-color: #8a8a8a;'"; 
+            stat = "заміна завершена";
+        }  
+        // 4. ЗЕЛЁНЫЙ: До даты старта осталось больше, чем 1 день (будущие наряды)
+        else if (targetDateMs >= afterTomorrowStart) {
+            rowStyle = " style='background-color: #93f556; '"; // Мягкий серый фон и приглушенный текст
+        }        
+        
+      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][3]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+    }
+
+   }else{
+    $('#mh_zaminy tbody').empty();
+   }
+}
+
+$("#mh_zaminy tbody").on("click", "td:nth-child(8)", async function() {
+const naryadId = $(this).data("id")+".json";
+   try {
+  let naryad = await async_read(ftp_id, 'Servis/new_zaminy', naryadId);
+        naryad = JSON.parse(naryad);
+        naryad[0].status = "del";  
+        const content =  JSON.stringify(naryad, null, 2); // Возвращаем красивый JSON-текст
+    try {
+        await async_write(ftp_id, 'Servis/new_zaminy', naryadId, content);
+    } catch (e) {
+        console.error("Ошибка удаления (не прочитал):", e);
+    }
+     } catch (e) {
+        console.error("Ошибка удаления (не изминил):", e);
+    }
+     zaminy_list_update();
+   
+});
+
+$('#bt_zm_crt').click(function() {
+const dataRow = document.querySelectorAll("#mh_zamina tr")[1];
+
+if (dataRow) {
+    // 1. Очищаем ячейки с редактируемым текстом (contenteditable)
+    const editableCells = dataRow.querySelectorAll('[contenteditable="true"]');
+    editableCells.forEach(cell => {
+        cell.textContent = ""; // Удаляет текст "--------"
+    });
+
+    // 2. Очищаем поля ввода (input) внутри ячеек
+    const inputs = dataRow.querySelectorAll('input[type="text"]');
+    inputs.forEach(input => {
+        input.value = ""; // Сбрасывает введенный пользователем текст
+    });
+}
+  });
