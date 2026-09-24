@@ -406,6 +406,57 @@
             </div>
         </div>
 
+        <div id='zamina_div' style="display: none;">
+          <div style=" background-color: #ffd0d0; padding: 10px; text-align: center;">
+            <table id="mh_zamina" class='form_to'>
+             <tr><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>📅 дата</td><td>⏰ кількість днів</td><td>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;💬 причина &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</td></tr>
+              <tr>
+                <td class="input-cell">
+                    <div>
+                        <div  class="suggestions-top"></div>
+                        <input  class="autocomplete-input source-units" type="text" placeholder="Пошук техники..." onfocus="this.value=''">
+                    </div>
+                </td>
+                <td class="input-cell">
+                    <div>
+                        <div  class="suggestions-top"></div>
+                        <input  class="autocomplete-input source-users" type="text" placeholder="Пошук ..." onfocus="this.value=''">
+                    </div>
+                </td>
+                <td class="input-cell">
+                    <div>
+                        <div  class="suggestions-top"></div>
+                        <input  class="autocomplete-input source-users" type="text" placeholder="Пошук ..." onfocus="this.value=''">
+                    </div>
+                </td>
+                
+                <td style="text-align: center; vertical-align: middle;">
+                    <input type="date" style="border: none; background: transparent; width: 100%; text-align: center; font-family: 'Arial', sans-serif; font-size: 14px; color: #333333;">
+                </td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <input type="number" min="1" max="31" placeholder="1" value="1" style="border: none; background: transparent; width: 100%; text-align: center; font-family: 'Arial', sans-serif; font-size: 14px; color: #333333;">
+                </td>
+                
+                <td contenteditable="true">----</td>
+            </table>
+             <div style="display: flex; justify-content: flex-end; gap: 3px;">
+                <button id='bt_zm_crt' style='width: 150px;'> 🧹 ОЧИСТИТИ </button> 
+                <button id='bt_zm_save' style='width: 150px;'> 💾 СТВОРИТИ </button>
+            </div>
+            </div>
+            <div style='text-align: center; margin-top: 10px;'>
+                АКТУАЛЬНІ ЗАМІНИ
+                 <div style="height: calc(100vh - 400px); max-height: calc(100vh - 400px); overflow-y: auto; margin-top: 10px; border: none;">
+                  <table id="mh_zaminy" class='table'>
+                     <thead style="background-color: #dfe7ff; position: sticky; top: 0; z-index: 10;">   
+            <tr><td>🚦 статус</td><td>📅 дата</td><td>⏰ кількість днів</td><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>💬 причина</td><td>🗑️</td></tr>
+             </thead>
+             <tbody></tbody>
+            </table>
+            </div>
+            </div>
+        </div>
+
     </div>
    
 <script src="zup.js"></script> 
