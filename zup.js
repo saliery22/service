@@ -744,7 +744,7 @@ const naryadId = $(this).data("id");
 // ----Заміни----------------------------------------------------------------
 
 $("#bt_zm_save").on("click", async function (){
-  const fileName = Date.now();
+  let fileName = Date.now();
 
    const table = document.getElementById("mh_zamina");
     const rows = table.querySelectorAll("tr");
@@ -759,7 +759,7 @@ $("#bt_zm_save").on("click", async function (){
 
         const inputVal = cells[3].querySelector("input").value;
         
-        fileName = fileName +'_'+inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null+'_'+cells[4].querySelector("input").value;
+        fileName = fileName +'_'+(inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null)+'_'+cells[4].querySelector("input").value;
 
         rowData["status"] = "створено";
         rowData["status_time"] = fileName;
@@ -826,7 +826,7 @@ async function zaminy_list_update(){
         // 1. ЖЁЛТЫЙ: Наряд строго на завтра 
         if (targetDateMs >= tomorrowStart && targetDateMs < afterTomorrowStart) {
             rowStyle = " style='background-color: #fcec62;'";
-            stat = "повідомлено";
+            stat = "заміна завтра";
         } 
         // 2. КРАСНЫЙ: Задача в процессе выполнения 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs < expirationDateMs) {
