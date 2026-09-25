@@ -758,6 +758,8 @@ $("#bt_zm_save").on("click", async function (){
         const rowData = {};
 
         const inputVal = cells[3].querySelector("input").value;
+        
+        fileName = fileName +'_'+inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null+'_'+cells[4].querySelector("input").value;
 
         rowData["status"] = "створено";
         rowData["status_time"] = fileName;
