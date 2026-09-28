@@ -768,7 +768,8 @@ $("#bt_zm_save").on("click", async function (){
         rowData["tr"] = cells[0].querySelector("input").value.trim();
         rowData["meh1"] = cells[1].querySelector("input").value.trim();
         rowData["meh2"] = cells[2].querySelector("input").value.trim();
-        rowData["comment"] = cells[5].textContent.trim();;
+        rowData["comment"] = cells[5].textContent.trim();
+        rowData["autor"] = cells[6].querySelector("input").value.trim();
 
         result.push(rowData);
     }
@@ -797,7 +798,7 @@ async function zaminy_list_update(){
         if(naryad[0].status!="del"){
           let date = new Date(Number(naryad[0].date)).toLocaleDateString();
           let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, Number(data[i].replace(".json", "")),naryad[0].date])
+          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, Number(data[i].replace(".json", "")),naryad[0].date, naryad[0].autor])
         }
        } catch (e) {
         console.error("Ошибка чтения:", e);
@@ -815,6 +816,7 @@ async function zaminy_list_update(){
     for (let i = 0; i < data2.length; i++) {
         let rowStyle = "";
         let stat = "очікує";
+        let zal = '';
         const targetDateMs = Number(data2[i][9]); // Таймстамп даты без времени из вашей таблицы
         const durationDays = Number(data2[i][3]); // Количество дней (например, из инпута number)
 
@@ -825,27 +827,28 @@ async function zaminy_list_update(){
 
         // 1. ЖЁЛТЫЙ: Наряд строго на завтра 
         if (targetDateMs >= tomorrowStart && targetDateMs < afterTomorrowStart) {
-            rowStyle = " style='background-color: #fcec62;'";
+            rowStyle = " style='background-color: #fcf4b2;'";
             stat = "заміна завтра";
         } 
         // 2. КРАСНЫЙ: Задача в процессе выполнения 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs < expirationDateMs) {
-            rowStyle = " style='background-color: #ff3f3f;'";
+            rowStyle = " style='background-color: #ff9f9f;'";
                 const msLeft = expirationDateMs - startOfTodayMs;
                 const daysLeft = Math.ceil(msLeft / 86400000); 
-                stat = "заміна (зал. " + daysLeft + " дн.)";
+                stat = "заміна";
+                zal = durationDays-daysLeft+1+"/";
         } 
         // 3. СЕРЫЙ: Задача успешно завершена 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs >= expirationDateMs) {
-            rowStyle = " style='background-color: #8a8a8a;'"; 
+            rowStyle = " style='background-color: #a1a1a1;'"; 
             stat = "заміна завершена";
         }  
         // 4. ЗЕЛЁНЫЙ: До даты старта осталось больше, чем 1 день (будущие наряды)
         else if (targetDateMs >= afterTomorrowStart) {
-            rowStyle = " style='background-color: #93f556; '"; // Мягкий серый фон и приглушенный текст
+            rowStyle = " style='background-color: #c8faaa; '"; // Мягкий серый фон и приглушенный текст
         }        
         
-      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][3]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+zal+data2[i][3]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
     }
 
    }else{
