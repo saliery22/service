@@ -798,7 +798,7 @@ async function zaminy_list_update(){
         if(naryad[0].status!="del"){
           let date = new Date(Number(naryad[0].date)).toLocaleDateString();
           let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, Number(data[i].replace(".json", "")),naryad[0].date, naryad[0].autor])
+          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, data[i].replace(".json", ""),naryad[0].date, naryad[0].autor])
         }
        } catch (e) {
         console.error("Ошибка чтения:", e);
@@ -856,7 +856,7 @@ async function zaminy_list_update(){
    }
 }
 
-$("#mh_zaminy tbody").on("click", "td:nth-child(8)", async function() {
+$("#mh_zaminy tbody").on("click", "td:nth-child(9)", async function() {
 const naryadId = $(this).data("id")+".json";
    try {
   let naryad = await async_read(ftp_id, 'Servis/new_zaminy', naryadId);
