@@ -744,7 +744,7 @@ const naryadId = $(this).data("id");
 // ----Заміни----------------------------------------------------------------
 
 $("#bt_zm_save").on("click", async function (){
-  let fileName = Date.now();
+  
 
    const table = document.getElementById("mh_zamina");
     const rows = table.querySelectorAll("tr");
@@ -752,38 +752,40 @@ $("#bt_zm_save").on("click", async function (){
 
     // Ключи для объекта JSON (соответствуют колонкам)
 
-    // Цикл со второй строки (индекс 1), так как индекс 0 — это заголовок
-    for (let i = 1; i < rows.length; i++) {
-        const cells = rows[i].querySelectorAll("td");
+
+
+        const cells = rows[1].querySelectorAll("td");
+     
+
+        if(!cells[1].querySelector("input").value || !cells[2].querySelector("input").value || !cells[3].querySelector("input").value){alert("Заповніть основні поля"); return;}
+
+        for (let i = 0; i < zam_date.length; i++) {
+
+        const inputVal = zam_date[i];
+        let fileName = Date.now() +'_'+inputVal+'_'+1;
         const rowData = {};
-
-        const inputVal = cells[3].querySelector("input").value;
-        
-        fileName = fileName +'_'+(inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null)+'_'+cells[4].querySelector("input").value;
-
         rowData["status"] = "створено";
         rowData["status_time"] = fileName;
-        rowData["date"] = inputVal ? Date.parse(inputVal.replace(/-/g, '/')) : null;
-        rowData["duration"] = cells[4].querySelector("input").value;
+        rowData["date"] = inputVal;
         rowData["tr"] = cells[0].querySelector("input").value.trim();
         rowData["meh1"] = cells[1].querySelector("input").value.trim();
         rowData["meh2"] = cells[2].querySelector("input").value.trim();
-        rowData["comment"] = cells[5].textContent.trim();
-        rowData["autor"] = cells[6].querySelector("input").value.trim();
-
+        rowData["comment"] = cells[4].textContent.trim();
+        rowData["autor"] = cells[5].querySelector("input").value.trim();
+        rowData["duration"] = 1;
         result.push(rowData);
-    }
-   
-      if(!result[0].tr || !result[0].meh1 || !result[0].meh2 || !result[0].date || !result[0].duration){alert("Заповніть основні поля"); return;}
 
-
-
-    const content =  JSON.stringify(result, null, 2); // Возвращаем красивый JSON-текст
-    try {
+        let content = [rowData];
+        content =  JSON.stringify(content, null, 2); // Возвращаем красивый JSON-текст
+         try {
         await async_write(ftp_id, 'Servis/new_zaminy', fileName + '.json', content);
-    } catch (e) {
+        } catch (e) {
         console.error("Ошибка сохранения:", e);
-    }
+       }
+
+        }
+       
+ 
      zaminy_list_update();
 });
 
@@ -848,7 +850,7 @@ async function zaminy_list_update(){
             rowStyle = " style='background-color: #c8faaa; '"; // Мягкий серый фон и приглушенный текст
         }        
         
-      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+zal+data2[i][3]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
     }
 
    }else{
@@ -875,6 +877,7 @@ const naryadId = $(this).data("id")+".json";
    
 });
 
+let zam_date = [];
 $('#bt_zm_crt').click(function() {
 const dataRow = document.querySelectorAll("#mh_zamina tr")[1];
 
@@ -891,4 +894,16 @@ if (dataRow) {
         input.value = ""; // Сбрасывает введенный пользователем текст
     });
 }
+  });
+
+    flatpickr("#multi-date-picker", {
+    locale: "uk",   
+    mode: "multiple",         // Включаем мультивыбор
+    dateFormat: "d/m",     // Формат вывода дат
+    conjunction: ", ",        // Разделитель дат в инпуте
+    onChange: function(selectedDates, dateStr, instance) {
+      if(selectedDates.length>0){
+        zam_date = selectedDates.map(date => date.getTime());
+      }
+    }
   });
