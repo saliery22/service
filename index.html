@@ -13,6 +13,10 @@
     <!-- Ссылка на шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+
 
 </head>
 <body>
@@ -409,7 +413,7 @@
         <div id='zamina_div' style="display: none;">
           <div style=" background-color: #ffd0d0; padding: 10px; text-align: center;">
             <table id="mh_zamina" class='form_to'>
-             <tr><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>📅 дата</td><td>⏰ кількість днів</td><td>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;💬 причина &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</td><td>👔 відповідальний</td></tr>
+             <tr><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 📅 дата &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</td><td>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;💬 причина &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</td><td>👔 відповідальний</td></tr>
               <tr>
                 <td class="input-cell">
                     <div>
@@ -431,11 +435,9 @@
                 </td>
                 
                 <td style="text-align: center; vertical-align: middle;">
-                    <input type="date" style="border: none; background: transparent; width: 100%; text-align: center; font-family: 'Arial', sans-serif; font-size: 14px; color: #333333;">
+                    <input type="text" id="multi-date-picker" placeholder="Виберіть дати" style="border: none; background: transparent; width: 100%; text-align: center; font-family: 'Arial', sans-serif; font-size: 14px; color: #333333;">
                 </td>
-                <td style="text-align: center; vertical-align: middle;">
-                    <input type="number" min="1" max="31" placeholder="1" value="1" style="border: none; background: transparent; width: 100%; text-align: center; font-family: 'Arial', sans-serif; font-size: 14px; color: #333333;">
-                </td>
+             
                 
                 <td contenteditable="true">----</td>
 
@@ -456,7 +458,7 @@
                  <div style="height: calc(100vh - 400px); max-height: calc(100vh - 400px); overflow-y: auto; margin-top: 10px; border: none;">
                   <table id="mh_zaminy" class='table'>
                      <thead style="background-color: #dfe7ff; position: sticky; top: 0; z-index: 10;">   
-            <tr><td>🚦 статус</td><td>📅 дата</td><td>⏰ кількість днів</td><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>💬 причина</td><td>👔 відповідальний</td><td>🗑️</td></tr>
+            <tr><td>🚦 статус</td><td>📅 дата</td><td>🚜 транспорт</td><td>👷 механізатор</td><td>👷 заміна</td><td>💬 причина</td><td>👔 відповідальний</td><td>🗑️</td></tr>
              </thead>
              <tbody></tbody>
             </table>
