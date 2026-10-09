@@ -773,6 +773,7 @@ $("#bt_zm_save").on("click", async function (){
         rowData["comment"] = cells[4].textContent.trim();
         rowData["autor"] = cells[5].querySelector("input").value.trim();
         rowData["duration"] = 1;
+        rowData["sort"] = zam_date[0];
         result.push(rowData);
 
         let content = [rowData];
@@ -800,7 +801,7 @@ async function zaminy_list_update(){
         if(naryad[0].status!="del"){
           let date = new Date(Number(naryad[0].date)).toLocaleDateString();
           let date_st = new Date(Number(naryad[0].status_time)).toLocaleString();
-          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, data[i].replace(".json", ""),naryad[0].date, naryad[0].autor])
+          data2.push([naryad[0].status, date_st, date, naryad[0].duration, naryad[0].tr, naryad[0].meh1, naryad[0].meh2, naryad[0].comment, data[i].replace(".json", ""),naryad[0].date, naryad[0].autor, naryad[0].sort])
         }
        } catch (e) {
         console.error("Ошибка чтения:", e);
@@ -808,7 +809,12 @@ async function zaminy_list_update(){
        
     }
 
-    data2.sort((a, b) => b[9] - a[9]);
+    //data2.sort((a, b) => b[9] - a[9]);
+        data2.sort((a, b) => {
+        const primary = b[11] - a[11];
+        if (primary !== 0) return primary;
+        return b[9] - a[9]; 
+        });
     $('#mh_zaminy tbody').empty();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -817,10 +823,27 @@ async function zaminy_list_update(){
     
     for (let i = 0; i < data2.length; i++) {
         let rowStyle = "";
+        let borderStyle = "";
         let stat = "очікує";
         let zal = '';
         const targetDateMs = Number(data2[i][9]); // Таймстамп даты без времени из вашей таблицы
         const durationDays = Number(data2[i][3]); // Количество дней (например, из инпута number)
+
+        if (i > 0) {
+        const prev3 = data2[i-1][5];
+        const prev4 = data2[i-1][6];
+        const current3 = data2[i][5];
+        const current4 = data2[i][6];
+
+        // Если хотя бы один элемент отличается от предыдущего — значит началась новая группа.
+        // Добавляем верхнюю жирную линию для этой строки.
+        if (current3 !== prev3 || current4 !== prev4) {
+            borderStyle  = "box-shadow: inset 0 2px 0 0 #000000 !important; ";  
+        }
+    }
+     if (i == 0 )borderStyle  = "box-shadow: inset 0 2px 0 0  #000000 !important; ";  
+      if (i == data2.length-1 )borderStyle  = "box-shadow: inset 0 -3px 0 0  #000000 !important; ";
+     
 
         // Вычисляем ключевые временные точки
         const tomorrowStart = startOfTodayMs + 86400000;
@@ -829,12 +852,12 @@ async function zaminy_list_update(){
 
         // 1. ЖЁЛТЫЙ: Наряд строго на завтра 
         if (targetDateMs >= tomorrowStart && targetDateMs < afterTomorrowStart) {
-            rowStyle = " style='background-color: #fcf4b2;'";
+            rowStyle = "background-color: #fcf4b2;";
             stat = "заміна завтра";
         } 
         // 2. КРАСНЫЙ: Задача в процессе выполнения 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs < expirationDateMs) {
-            rowStyle = " style='background-color: #ff9f9f;'";
+            rowStyle = "background-color: #ff9f9f;";
                 const msLeft = expirationDateMs - startOfTodayMs;
                 const daysLeft = Math.ceil(msLeft / 86400000); 
                 stat = "заміна";
@@ -842,15 +865,20 @@ async function zaminy_list_update(){
         } 
         // 3. СЕРЫЙ: Задача успешно завершена 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs >= expirationDateMs) {
-            rowStyle = " style='background-color: #a1a1a1;'"; 
+            rowStyle = "background-color: #a1a1a1;"; 
             stat = "заміна завершена";
         }  
         // 4. ЗЕЛЁНЫЙ: До даты старта осталось больше, чем 1 день (будущие наряды)
         else if (targetDateMs >= afterTomorrowStart) {
-            rowStyle = " style='background-color: #c8faaa; '"; // Мягкий серый фон и приглушенный текст
-        }        
+            rowStyle = " background-color: #c8faaa;"; // Мягкий серый фон и приглушенный текст
+        }   
+
+        let finalStyle = "";
+        if (rowStyle || borderStyle) {
+        finalStyle = " style='" + borderStyle + rowStyle + "'";
+    }
         
-      $("#mh_zaminy  tbody").append("<tr" + rowStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+      $("#mh_zaminy  tbody").append("<tr" + finalStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
     }
 
    }else{
