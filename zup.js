@@ -839,10 +839,10 @@ async function zaminy_list_update(){
         // Добавляем верхнюю жирную линию для этой строки.
         if (current3 !== prev3 || current4 !== prev4) {
             borderStyle  = "box-shadow: inset 0 2px 0 0 #000000 !important; ";  
+
         }
     }
-     if (i == 0 )borderStyle  = "box-shadow: inset 0 2px 0 0  #000000 !important; ";  
-      if (i == data2.length-1 )borderStyle  = "box-shadow: inset 0 -3px 0 0  #000000 !important; ";
+
      
 
         // Вычисляем ключевые временные точки
@@ -886,7 +886,7 @@ async function zaminy_list_update(){
    }
 }
 
-$("#mh_zaminy tbody").on("click", "td:nth-child(9)", async function() {
+$("#mh_zaminy tbody").on("click", "td:nth-child(8)", async function() {
 const naryadId = $(this).data("id")+".json";
    try {
   let naryad = await async_read(ftp_id, 'Servis/new_zaminy', naryadId);
