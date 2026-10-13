@@ -810,11 +810,18 @@ async function zaminy_list_update(){
     }
 
     //data2.sort((a, b) => b[9] - a[9]);
-        data2.sort((a, b) => {
-        const primary = b[11] - a[11];
-        if (primary !== 0) return primary;
-        return b[9] - a[9]; 
-        });
+    data2.sort((a, b) => {
+        // 1. Сначала по убыванию индекса 11
+        const first = b[11] - a[11];
+        if (first !== 0) return first;
+
+        // 2. Затем от А до Я по индексу 5 (строковое сравнение)
+        const second = String(a[5]).localeCompare(String(b[5]));
+        if (second !== 0) return second;
+
+        // 3. В конце по убыванию индекса 9
+        return b[9] - a[9];
+    });
     $('#mh_zaminy tbody').empty();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -852,12 +859,12 @@ async function zaminy_list_update(){
 
         // 1. ЖЁЛТЫЙ: Наряд строго на завтра 
         if (targetDateMs >= tomorrowStart && targetDateMs < afterTomorrowStart) {
-            rowStyle = "background-color: #fcf4b2;";
-            stat = "заміна завтра";
+            rowStyle = "style= 'background-color: #fcf4b2;"+ borderStyle+"'" ;
+            stat = "завтра";
         } 
         // 2. КРАСНЫЙ: Задача в процессе выполнения 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs < expirationDateMs) {
-            rowStyle = "background-color: #ff9f9f;";
+            rowStyle = "style= 'background-color: #ff9f9f;"+ borderStyle+"'";
                 const msLeft = expirationDateMs - startOfTodayMs;
                 const daysLeft = Math.ceil(msLeft / 86400000); 
                 stat = "заміна";
@@ -865,21 +872,69 @@ async function zaminy_list_update(){
         } 
         // 3. СЕРЫЙ: Задача успешно завершена 
         else if (startOfTodayMs >= targetDateMs && startOfTodayMs >= expirationDateMs) {
-            rowStyle = "background-color: #a1a1a1;"; 
-            stat = "заміна завершена";
+            rowStyle = "style= 'background-color: #a1a1a1;"+ borderStyle+"'"; 
+            stat = "завершено";
         }  
         // 4. ЗЕЛЁНЫЙ: До даты старта осталось больше, чем 1 день (будущие наряды)
         else if (targetDateMs >= afterTomorrowStart) {
-            rowStyle = " background-color: #c8faaa;"; // Мягкий серый фон и приглушенный текст
+            rowStyle = " style= 'background-color: #c8faaa;"+ borderStyle+"'"; // Мягкий серый фон и приглушенный текст
         }   
 
         let finalStyle = "";
-        if (rowStyle || borderStyle) {
-        finalStyle = " style='" + borderStyle + rowStyle + "'";
+        if ( borderStyle ) {
+        finalStyle = " style='" + borderStyle + "'";
     }
         
-      $("#mh_zaminy  tbody").append("<tr" + finalStyle + "><td>"+stat+"</td><td>"+data2[i][2]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
+      $("#mh_zaminy  tbody").append("<tr"+ finalStyle +"><td "+ rowStyle +">"+stat+"</td><td "+ rowStyle +">"+data2[i][2]+"</td><td>"+data2[i][4]+"</td><td>"+data2[i][5]+"</td><td>"+data2[i][6]+"</td><td>"+data2[i][7]+"</td><td>"+data2[i][10]+"</td><td  data-id='"+ data2[i][8] +"' style='cursor: pointer; user-select: none;'>❌</td></tr>"); 
     }
+
+var mainTopCell = null;
+
+// Объект, где будем хранить верхние ячейки для всех объединяемых колонок (индексы 2, 3, 4, 5, 6)
+var topCells = {};
+
+$('#mh_zaminy tbody tr').each(function () {
+    var $row = $(this);
+    
+    // Находим ячейку в 4-й колонке (индекс 3, так как отсчет с 0)
+    var currentMainCell = $row.find('td').eq(3);
+    if (!currentMainCell.length) return; // Пропускаем, если строка пустая
+
+    if (mainTopCell === null) {
+        // Это самая первая строка таблицы — инициализируем базовые верхние ячейки
+        mainTopCell = currentMainCell;
+        for (var col = 2; col <= 6; col++) {
+            topCells[col] = $row.find('td').eq(col);
+        }
+    } 
+    // ГЛАВНОЕ УСЛОВИЕ: Проверяем совпадение текста именно в 4-й колонке
+    else if (currentMainCell.text() === mainTopCell.text()) {
+        
+        // Если текст в 4-й колонке совпал, увеличиваем rowspan для ВСЕХ средних колонок
+        for (var col = 2; col <= 6; col++) {
+            var targetCell = topCells[col];
+            if (targetCell && targetCell.length) {
+                var rowspan = Number(targetCell.attr('rowspan')) || 1;
+                targetCell.attr('rowspan', rowspan + 1);
+            }
+            
+            // Помечаем текущую ячейку для удаления
+            $row.find('td').eq(col).addClass('remove-later');
+        }
+    } 
+    else {
+        // Текст в 4-й колонке изменился — сбрасываем триггер и фиксируем новые "верхние" ячейки
+        mainTopCell = currentMainCell;
+        for (var col = 2; col <= 6; col++) {
+            topCells[col] = $row.find('td').eq(col);
+        }
+    }
+});
+
+// Финально удаляем все ячейки, которые ушли под rowspan, чтобы не ломать верстку
+$('#mh_zaminy tbody tr td.remove-later').remove();
+
+
 
    }else{
     $('#mh_zaminy tbody').empty();
@@ -930,8 +985,7 @@ if (dataRow) {
     dateFormat: "d/m",     // Формат вывода дат
     conjunction: ", ",        // Разделитель дат в инпуте
     onChange: function(selectedDates, dateStr, instance) {
-      if(selectedDates.length>0){
-        zam_date = selectedDates.map(date => date.getTime());
-      }
+        zam_date = selectedDates.map(date => date.getTime()).sort((a, b) => a - b);
+     
     }
   });
